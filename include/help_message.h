@@ -1,0 +1,1 @@
+#define HELP_MESSAGE "monitorc connects to a remote monitord service and display the server's usage and performance data.\n\nUsage:\n\tmonitorc [<ip>] [<port>]\n\tmonitorc -h\n\nOptions:\n\t-h\t\tHelp, show this screen"
