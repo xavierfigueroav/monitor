@@ -1,12 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+#include "../../include/server_helper_definitions.h"
+int validate_options(int *hflag, int *cflag, int *lflag, char **log_file, char **port, int argc, char **argv){
 
-int validate_options(int *hflag, int *cflag, int *port, char **log_file, int argc, char **argv){
+    int c, carg;
+    long port_number;
 
-    int c;
-
-    while((c = getopt(argc, argv, "::cl:h")) != -1){
+    while((c = getopt(argc, argv, "chl::")) != -1){
 
         switch(c){
 
@@ -14,45 +15,71 @@ int validate_options(int *hflag, int *cflag, int *port, char **log_file, int arg
                 *cflag = 1;
                 break;
             case 'l':
-                *log_file = optarg;
+                *lflag = 1;
                 break;
             case 'h':
                 *hflag = 1;
                 break;
             case '?':
-                if(optopt == 'l')
-                    fprintf (stderr, "Option -%c requires an argument.\n", optopt);
-                else
-                    fprintf (stderr, "Unknown option `-%c'.\n", optopt);
-                return 1;
+                fprintf (stderr, "Unknown option `-%c'.\n", optopt);
+                return 0;
             default:
                 abort();
         }
     }
+    
+    carg = argc - optind;
 
-    if(*cflag + *hflag > 1 || (*cflag + *hflag > 0 && *log_file != NULL)){
+    if(*cflag + *hflag + *lflag > 1 ){
 
         fprintf (stderr, "More than one option was chosen.\n");
-        return 1;
+        return 0;
+    }
+    
+    if(carg > 2 || (*cflag && carg > 1) || (*hflag && carg != 0)){
+    
+        fprintf (stderr, "More arguments than expected were given.\n");
+        return 0;
+        
     }
 
-    if(argc - optind > 1){
+    if(carg == 1){
+        char *trash;
+        *port = argv[optind];
+        port_number = strtol(argv[optind], &trash, 10);
 
-        fprintf (stderr, "More arguments than expected were given.\n");
-        return 1;
+        if(port_number == 0 || *trash != '\0'){
 
-    } else if(argc - optind == 1){
+            if(*lflag){
+
+                *log_file = argv[optind];
+                *port = DEFAULT_PORT;
+
+            } else{
+                fprintf (stderr, "<port> argument must be an integer value.\n");
+                return 0;
+            }
+        }
+    } else if(carg == 2){
+
+        if(!*lflag){
+            fprintf (stderr, "More arguments than expected were given.\n");
+            return 0;
+        }
+
+        *log_file = argv[optind];
 
         char *trash;
-        *port = (int) strtol(argv[optind], &trash, 10);
-        
-        printf("port: %d", *port);
+        *port = argv[optind + 1];
+        port_number = strtol(argv[optind + 1], &trash, 10);
 
-        if(*port == 0 || *trash != '\0'){
+        if(port_number == 0 || *trash != '\0'){
             fprintf (stderr, "<port> argument must be an integer value.\n");
-            return 1;
+            return 0;
         }
     }
 
-    return 0;
+    //printf("hflag: %d, cflag: %d, lflag: %d, log_file: %s, port: %s\n", *hflag, *cflag, *lflag, *log_file, *port);
+
+    return 1;
 }
