@@ -3,6 +3,7 @@
 #include <syslog.h>
 #include <time.h>
 #include <signal.h>
+#include <semaphore.h>
 #include "../../include/server_helper_definitions.h"
 #include "../../include/csapp.h"
 #include "../../include/sysinfo.h"
@@ -34,6 +35,8 @@ FILE *memory_f;
 FILE *processes_f;
 FILE *loadavg_f;
 FILE *log_file;
+
+sem_t sem;
 
 int main(int argc, char **argv){
 
@@ -70,6 +73,7 @@ void monitor(){
     int listenfd, *connfd;
 	unsigned int clientlen;
 	struct sockaddr_in clientaddr;
+	sem_init(&sem, 0, 1);
 
 	listenfd = Open_listenfd(port);
 
@@ -248,8 +252,14 @@ int send_variable_info(int connfd){
 
 void set_variable_info(PerformanceInfo *vb_info, short *size){
 
-    int *processes = get_processes(processes_f);
     float *loadavg = get_loadavg(loadavg_f);
+    int *processes = get_processes(processes_f);
+
+    sem_wait(&sem);
+    rewind(processes_f);
+    sem_post(&sem);
+
+    int *usage = get_cpus_usage(processes_f);
 
     performance_info__init(vb_info);
 
@@ -276,16 +286,29 @@ void set_variable_info(PerformanceInfo *vb_info, short *size){
 
     vb_info->loadavg = loadavg_info;
 
-    vb_info->n_processor_usage = 2;
-    vb_info->processor_usage = malloc(sizeof(int) * 2);
-    *(vb_info->processor_usage) = 40;
-    *(vb_info->processor_usage + 1) = 60;
+    vb_info->n_processor_usage = usage[0];
+    vb_info->processor_usage = malloc(sizeof(int) * usage[0]);
+
+    for(int i = 0; i < usage[0]; ++i)
+        *(vb_info->processor_usage + i) = usage[i + 1];
+
     *size = performance_info__get_packed_size(vb_info);
 
+    sem_wait(&sem);
     rewind(uptime_f);
+    sem_post(&sem);
+
+    sem_wait(&sem);
     rewind(memory_f);
+    sem_post(&sem);
+
+    sem_wait(&sem);
     rewind(processes_f);
+    sem_post(&sem);
+
+    sem_wait(&sem);
     rewind(loadavg_f);
+    sem_post(&sem);
 }
 
 void sigint_handler(int sig){
