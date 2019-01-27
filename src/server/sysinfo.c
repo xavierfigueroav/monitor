@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #define MAXLINE 10000
+
 float get_uptime(FILE *file){
     // file should point to '/proc/uptime'
     float uptime = 0;
@@ -33,6 +34,40 @@ int get_cpus(){
     fclose(file);
 
     return n;
+}
+
+int *get_cpus_usage(FILE *file){
+    // file should point to '/proc/stat'
+
+    int cpus = get_cpus();
+
+    int *usage = malloc(sizeof(int) * cpus + 1); 
+    size_t s;
+    char *line = (char *) malloc(sizeof(char) * MAXLINE);
+    char *trash;
+
+    float user, nice, system, idle, iowait, irq, softirq, steal, time_since_boot, idle_since_boot, guest, guest_nice;
+
+    // skip the first line starting with 'cpu'
+    fscanf(file, "%s %f %f %f %f %f %f %f %f %f %f", trash, &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest, &guest_nice);
+    fscanf(file, "%s", trash);
+
+    int i = 1;
+    while(strstr(trash, "cpu")){
+
+        fscanf(file, "%f %f %f %f %f %f %f %f %f %f", &user, &nice, &system, &idle, &iowait, &irq, &softirq, &steal, &guest, &guest_nice);
+
+        time_since_boot = user + nice + system + idle + iowait + irq + softirq + steal;
+        idle_since_boot = idle + iowait;
+
+        usage[i] = ((time_since_boot - idle_since_boot)/time_since_boot) * 100;
+
+        fscanf(file, "%s", trash);
+        ++i;
+    }
+
+    usage[0] = cpus;
+    return usage;
 }
 
 int *get_processes(FILE *file){
