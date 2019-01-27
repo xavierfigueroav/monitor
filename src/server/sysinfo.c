@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+#define MAXLINE 10000
 float get_uptime(FILE *file){
     // file should point to '/proc/uptime'
     float uptime = 0;
@@ -35,7 +35,7 @@ int get_cpus(){
     return n;
 }
 
-int *get_proccesses(FILE *file){
+int *get_processes(FILE *file){
     // file should point to '/proc/stat'
     int *proc = (int *) malloc(sizeof(int) * 2);
     size_t s;

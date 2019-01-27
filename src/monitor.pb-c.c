@@ -6,7 +6,7 @@
 #define PROTOBUF_C__NO_DEPRECATED
 #endif
 
-#include "monitor.pb-c.h"
+#include "../include/monitor.pb-c.h"
 void   system_info__init
                      (SystemInfo         *message)
 {

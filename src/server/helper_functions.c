@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include "../../include/server_helper_definitions.h"
+
 int validate_options(int *hflag, int *cflag, int *lflag, char **log_file, char **port, int argc, char **argv){
 
     int c, carg;
@@ -78,8 +79,6 @@ int validate_options(int *hflag, int *cflag, int *lflag, char **log_file, char *
             return 0;
         }
     }
-
-    //printf("hflag: %d, cflag: %d, lflag: %d, log_file: %s, port: %s\n", *hflag, *cflag, *lflag, *log_file, *port);
 
     return 1;
 }
