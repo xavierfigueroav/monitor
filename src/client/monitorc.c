@@ -10,6 +10,7 @@ PerformanceInfo *variable_info(int connfd, void *buffer);
 void show_info_system(SystemInfo *sys);
 void show_info_performance(PerformanceInfo *per);
 void show_info_performance_loadavg(PerformanceInfo__LoadAvg *loadavg);
+int *to_hours(float seconds);
 
 int main(int argc, char **argv){
 
@@ -72,8 +73,13 @@ void show_info_system(SystemInfo *sys){
 }
 
 void show_info_performance(PerformanceInfo *per){
-    printf("Uptime: %.2f\n",per->uptime);
-    printf("Porcentaje de uso: %ls\n %",per->processor_usage);
+
+    int *uptime = to_hours(per->uptime);
+    printf("Uptime: %dh %dmin (%.2f seconds)\n", uptime[0], uptime[1], per->uptime);
+
+    for(int i = 0; i < per->n_processor_usage; ++i)
+        printf("Porcentaje de uso cpu%d: %d%%\n", i + 1, (per->processor_usage)[i]);
+
     printf("Memoria libre: %d Kb\n",per->mem_free);
     printf("Numero de procesos: %d\n",per->num_process);
     printf("Numero de procesos en ejecucion: %d\n",per->num_process_running);
@@ -81,4 +87,20 @@ void show_info_performance(PerformanceInfo *per){
 
 void show_info_performance_loadavg(PerformanceInfo__LoadAvg *loadavg){
     printf("Carga Promedio: 5 min:%.2f 10 min:%.2f 15 min:%.2f\n", loadavg->min5, loadavg->min10, loadavg->min15);
+}
+
+int *to_hours(float seconds){
+
+    float h = (seconds/3600);
+
+    int int_h = h;
+
+    int m = (((h - int_h) * 100) * 60) / 100;
+
+    int *uptime = malloc(sizeof(int) * 2);
+
+    uptime[0] = int_h;
+    uptime[1] = m;
+
+    return uptime;
 }

@@ -200,15 +200,26 @@ int send_static_info(int connfd){
 void set_static_info(SystemInfo *st_info, short *size){
 
     system_info__init(st_info);
+
+    sem_wait(&sem);
     char **system_info = get_system();
+    sem_post(&sem);
+
     st_info->system_name = system_info[0];
     st_info->version = system_info[1];
 
     st_info->has_num_processors = 1;
+
+    sem_wait(&sem);
     st_info->num_processors = get_cpus();
+    sem_post(&sem);
 
     st_info->has_mem_total = 1;
+
+    sem_wait(&sem);
     st_info->mem_total = get_total_memory();
+    sem_post(&sem);
+
     *size = system_info__get_packed_size(st_info);
 }
 
@@ -252,14 +263,21 @@ int send_variable_info(int connfd){
 
 void set_variable_info(PerformanceInfo *vb_info, short *size){
 
+    sem_wait(&sem);
     float *loadavg = get_loadavg(loadavg_f);
+    sem_post(&sem);
+    
+    sem_wait(&sem);
     int *processes = get_processes(processes_f);
+    sem_post(&sem);
 
     sem_wait(&sem);
     rewind(processes_f);
     sem_post(&sem);
 
+    sem_wait(&sem);
     int *usage = get_cpus_usage(processes_f);
+    sem_post(&sem);
 
     performance_info__init(vb_info);
 
@@ -279,8 +297,14 @@ void set_variable_info(PerformanceInfo *vb_info, short *size){
     vb_info->has_num_process = 1;
     vb_info->has_num_process_running = 1;
 
+    sem_wait(&sem);
     vb_info->uptime = get_uptime(uptime_f);
+    sem_post(&sem);
+
+    sem_wait(&sem);
     vb_info->mem_free = get_free_memory(memory_f);
+    sem_post(&sem);
+
     vb_info->num_process = processes[0];
     vb_info->num_process_running = processes[1];
 
