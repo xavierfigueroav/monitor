@@ -13,3 +13,6 @@ monitorc: src/client/monitorc.c csapp.o src/protobuf-c.c src/monitor.pb-c.c
 
 csapp.o: src/csapp.c
 	gcc $(CFLAGS) -c src/csapp.c
+
+clean:
+	rm monitorc monitord csapp.o
